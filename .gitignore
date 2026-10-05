@@ -1,0 +1,10 @@
+.venv
+__pycache__/
+*.pyc
+.pytest_cache/
+site/
+.env*
+
+# Runtime state: SQLite db (+ WAL/SHM) and digests. Holds JamBase data, which
+# the Developer terms forbid keeping past 30 days, let alone publishing.
+data/

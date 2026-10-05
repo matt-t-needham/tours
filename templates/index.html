@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ title }}</title>
+<style>
+  /* Catppuccin Mocha — the palette bix-ai and the blog already use. */
+  :root {
+    --bg:#1e1e2e; --mantle:#181825; --surface0:#313244; --surface1:#45475a;
+    --surface2:#585b70; --overlay0:#6c7086; --overlay1:#7f849c;
+    --text:#cdd6f4; --subtext:#a6adc8; --blue:#89b4fa; --mauve:#cba6f7;
+    --peach:#fab387; --green:#a6e3a1; --yellow:#f9e2af; --red:#f38ba8;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); padding:0 16px 64px;
+         font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;
+         -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:960px; margin:0 auto; }
+  a { color:inherit; }
+
+  header { padding:30px 0 6px; }
+  h1 { font-size:20px; font-weight:650; letter-spacing:-.01em; }
+  .lede { color:var(--subtext); font-size:13px; margin-top:4px; }
+  .status { color:var(--overlay0); font-size:12px; margin-top:8px; }
+  .status a { color:var(--overlay1); text-decoration:none;
+              border-bottom:1px solid transparent; }
+  .status a:hover { color:var(--text); border-bottom-color:var(--surface2); }
+
+  .bar { display:flex; gap:20px; flex-wrap:wrap; align-items:center;
+         margin:18px 0 4px; padding-bottom:14px;
+         border-bottom:1px solid var(--surface0); }
+  .grp { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+  .grp > .lbl { font-size:11px; text-transform:uppercase; letter-spacing:.07em;
+                color:var(--overlay1); margin-right:2px; }
+  .btn { background:none; border:1px solid var(--surface0); color:var(--subtext);
+         border-radius:6px; padding:5px 11px; font-size:12.5px; cursor:pointer;
+         font-family:inherit; }
+  .btn:hover { border-color:var(--surface2); color:var(--text); }
+  .btn[aria-pressed="true"] { background:var(--surface0); color:var(--text);
+                              border-color:var(--surface1); }
+  .cnt { color:var(--overlay0); font-size:11px; margin-left:3px; }
+  .btn[aria-pressed="true"] .cnt { color:var(--subtext); }
+
+  .note { border:1px solid var(--surface0); border-left:3px solid var(--peach);
+          background:var(--mantle); padding:10px 14px; border-radius:6px;
+          margin:16px 0; font-size:13px; }
+  .note a { color:var(--peach); }
+  .note.warn { border-left-color:var(--red); }
+
+  table { width:100%; border-collapse:collapse; font-size:13.5px;
+          table-layout:fixed; margin-top:6px; }
+  th { text-align:left; font-size:10px; text-transform:uppercase;
+       letter-spacing:.09em; color:var(--overlay0); font-weight:500;
+       padding:0 14px 8px 0; border-bottom:1px solid var(--surface1);
+       white-space:nowrap; }
+  th.c-when { width:144px; } th.c-art { width:23%; }
+  th.c-role { width:222px; } th.c-act { width:104px; }
+  td { padding:8px 14px 8px 0; border-bottom:1px solid rgba(49,50,68,.4);
+       vertical-align:middle; overflow:hidden; text-overflow:ellipsis;
+       white-space:nowrap; }
+  td.dt { color:var(--overlay1); font-size:12px; }
+  td.nm { font-weight:600; }
+  td.c { color:var(--subtext); }
+  td.c .city { color:var(--overlay0); }
+  .grprow td { font-size:10.5px; text-transform:uppercase; letter-spacing:.11em;
+               color:var(--overlay0); padding:26px 0 7px; border-bottom:none; }
+  tbody tr.grprow:first-child td { padding-top:10px; }
+
+  .tag { font-size:10px; letter-spacing:.06em; text-transform:uppercase;
+         padding:2px 7px; border-radius:4px; display:inline-block; }
+  .tag.headline { color:var(--blue);     background:rgba(137,180,250,.12); }
+  .tag.support  { color:var(--overlay1); background:rgba(108,112,134,.18); }
+  .tag.festival { color:var(--mauve);    background:rgba(203,166,247,.13); }
+  .det { color:var(--subtext); font-size:12px; }
+  .more { color:var(--overlay0); font-size:11.5px; cursor:help;
+          border-bottom:1px dotted var(--surface2); }
+  .more:hover, .more:focus { color:var(--peach); border-bottom-color:var(--peach);
+                             outline:none; }
+  .lnk { font-size:12px; text-decoration:none; white-space:nowrap;
+         border-bottom:1px solid transparent; color:var(--green); }
+  .lnk:hover { border-bottom-color:var(--green); }
+  /* A bare venue homepage is not an event page — don't dress it as one. */
+  .lnk.weak { color:var(--overlay1); }
+  .lnk.weak:hover { color:var(--text); border-bottom-color:var(--surface2); }
+  .past { opacity:.4; }
+  .cancelled td.nm { text-decoration:line-through; }
+  .badge { font-size:10px; padding:1px 6px; border-radius:4px; margin-left:6px;
+           background:var(--surface0); color:var(--subtext); }
+  .badge.new { color:var(--peach); background:rgba(250,179,135,.12); }
+  .badge.bad { color:var(--red); background:rgba(243,139,168,.12); }
+
+  #pop { position:absolute; z-index:50; background:var(--mantle);
+         border:1px solid var(--surface1); border-radius:8px; padding:10px 12px;
+         box-shadow:0 8px 24px rgba(0,0,0,.45); font-size:12.5px;
+         pointer-events:none; max-width:340px; }
+  #pop .ph { font-size:10px; text-transform:uppercase; letter-spacing:.09em;
+             color:var(--overlay0); margin-bottom:7px; }
+  #pop .pr { display:grid; grid-template-columns:82px 1fr; gap:10px;
+             padding:3px 0; white-space:nowrap; }
+  #pop .pd { color:var(--peach); }
+  #pop .pv { color:var(--subtext); overflow:hidden; text-overflow:ellipsis; }
+  #pop .pc { color:var(--overlay0); }
+
+  .sep { width:1px; align-self:stretch; background:var(--surface0); margin:0 4px; }
+  .badge.maybe { color:var(--yellow); background:rgba(249,226,175,.12); }
+
+  .searches { margin:16px 0 6px; }
+  .searches .lbl { font-size:11px; text-transform:uppercase; letter-spacing:.07em;
+                   color:var(--overlay1); margin-bottom:6px; }
+  .srch { display:flex; gap:14px; align-items:center; flex-wrap:wrap;
+          padding:8px 10px; border:1px solid var(--surface0); border-radius:6px;
+          margin-bottom:6px; cursor:pointer; font-size:13px; }
+  .srch:hover { border-color:var(--surface2); }
+  .srch[aria-pressed="true"] { background:var(--mantle); border-color:var(--surface1); }
+  .srch .pl { font-weight:600; }
+  .srch .meta { color:var(--overlay1); font-size:12px; }
+  .srch .acts { margin-left:auto; display:flex; gap:6px; }
+  .srch:not([aria-pressed="true"]) .acts { display:none; }
+
+  #tripform { display:none; border:1px solid var(--surface0); border-radius:6px;
+              background:var(--mantle); padding:12px 14px; margin:16px 0;
+              font-size:13px; }
+  #tripform.open { display:block; }
+  #tripform form { display:flex; gap:10px; flex-wrap:wrap; align-items:end; }
+  #tripform label { display:flex; flex-direction:column; gap:3px; font-size:11px;
+                    text-transform:uppercase; letter-spacing:.07em; color:var(--overlay1); }
+  #tripform input { background:var(--bg); color:var(--text); font:inherit;
+                    font-size:13px; border:1px solid var(--surface1); border-radius:6px;
+                    padding:5px 8px; text-transform:none; letter-spacing:0; }
+  #tripform input[name=place] { width:180px; } #tripform input[name=radius_mi] { width:70px; }
+  #tripform .hint { color:var(--overlay0); font-size:12px; margin-top:8px; }
+  #tripform .err { color:var(--red); }
+  .btn:disabled { opacity:.5; cursor:wait; }
+
+  footer { margin-top:40px; padding-top:14px; border-top:1px solid var(--surface0);
+           color:var(--overlay0); font-size:12px; line-height:1.7; }
+  footer a { color:var(--overlay1); }
+  @media (max-width:640px) {
+    th.c-role, td.rl { display:none; }
+    th.c-when { width:96px; }
+    th.c-art { width:40%; }
+  }
+</style>
+</head>
+<body><div class="wrap">
+
+<header>
+  <h1>{{ title }}</h1>
+  <div class="lede" id="lede"></div>
+  <div class="status">
+    Last sync {{ synced[:16].replace('T',' ') if synced else 'never' }} ·
+    <a href="https://data.jambase.com/account/usage" rel="noopener"
+       title="Open the JamBase usage dashboard">{% if quota.quota is none -%}
+      {{ quota.used }} API calls this period
+      {%- else -%}
+      {{ quota.used }} of {{ '{:,}'.format(quota.quota) }} API calls used · {{ quota.remaining }} left
+      {%- endif %}{% if quota_resets %} · resets {{ quota_resets }}{% endif %}
+      {%- if quota.source != 'jambase' %} (estimated){% endif %}</a>
+  </div>
+</header>
+
+<div class="bar">
+  <div class="grp"><span class="lbl">Region</span>
+    <div id="rtabs" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+    <span class="sep"></span>
+    <div id="ttabs" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+    <button class="btn" id="tripbtn" aria-expanded="false">+ Trip</button></div>
+  <div class="grp"><span class="lbl">Sort</span>
+    <div id="stabs" style="display:flex;gap:6px;flex-wrap:wrap"></div></div>
+</div>
+
+{% if charging %}<div class="note warn"><b>! JamBase is charging.</b> {{ charging }}</div>{% endif %}
+{% if paused_reason %}<div class="note warn"><b>Sync paused.</b> {{ paused_reason }}</div>{% endif %}
+{% if stale %}<div class="note warn"><b>Data may be stale</b> — last successful sync {{ synced[:10] }}.</div>{% endif %}
+{% if pending %}<div class="note">{{ pending }} artist {{ 'match needs' if pending == 1 else 'matches need' }} review before {{ 'their' }} shows appear here. <a href="/review">Review</a>.</div>{% endif %}
+
+<div id="tripform">
+  <form id="tf">
+    <label>City<input name="place" placeholder="Boston, MA" required></label>
+    <label>From<input name="date_from" type="date" required></label>
+    <label>To<input name="date_to" type="date" required></label>
+    <label>Miles<input name="radius_mi" type="number" min="1" max="150" value="{{ trip_radius }}"></label>
+    <button class="btn" type="submit">Search</button>
+  </form>
+  <div class="hint" id="tfmsg">Uses 2–4 API calls ({{ quota.remaining if quota.remaining is not none else 'unlimited' }} left). Add “, ST” to pick the right city — Portland, ME vs Portland, OR.</div>
+</div>
+<div id="searches" class="searches" hidden></div>
+
+<noscript><div class="note">This page needs JavaScript for the region filter and sorting.</div></noscript>
+<div id="out"></div>
+
+<footer>
+  Concert data from <a href="https://www.jambase.com" rel="noopener">JamBase</a>
+</footer>
+</div>
+
+<script>
+const DATA = {{ rows|tojson }};
+const TRIPS = {{ trips|tojson }};
+const TODAY = {{ today|tojson }};
+const HOME = {{ home_metro|tojson }};
+const REGIONS = [["All","all"]].concat({{ region_pairs|tojson }});
+const SORTS = [["Date ↑","date_asc"],["Date ↓","date_desc"],
+               ["Recently announced","announced"]];
+const MONTHS = ["January","February","March","April","May","June","July",
+                "August","September","October","November","December"];
+
+let region = "all", sort = "date_asc";
+// A trip tab is "trip:<region label>"; `search` is the selected search's id.
+let search = null;
+const TRIP_REGIONS = [...new Set(TRIPS.map(t => t.region))];
+const isTrip = () => region.startsWith("trip:");
+const tripsHere = () => TRIPS.filter(t => "trip:" + t.region === region);
+const curSearch = () => TRIPS.find(t => t.id === search) || null;
+let ROWS = [];
+
+function esc(s){ return String(s ?? "").replace(/[&<>"']/g, m =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
+
+// The region filter reselects which show is displayed rather than hiding rows:
+// with Portland preferred by default, an artist playing both Portland and
+// Seattle would otherwise vanish from the Seattle filter.
+function inRegion() {
+  if (isTrip()) { const t = curSearch(); return t ? t.results.slice() : []; }
+  if (region === "all") return DATA.slice();
+  const out = [];
+  for (const a of DATA) {
+    const show = a.shows.find(s => s.metro_id === region);
+    if (show) out.push(Object.assign({}, a, show));
+  }
+  return out;
+}
+
+function sorted() {
+  const r = inRegion();
+  if (sort === "date_asc")  r.sort((a,b) => (a.start_local||"").localeCompare(b.start_local||""));
+  if (sort === "date_desc") r.sort((a,b) => (b.start_local||"").localeCompare(a.start_local||""));
+  if (sort === "announced") r.sort((a,b) => (b.announced_at||"").localeCompare(a.announced_at||""));
+  return r;
+}
+
+function groupLabel(row) {
+  if (sort !== "announced") {
+    if (!row.month) return "";
+    const [y,m] = row.month.split("-");
+    return MONTHS[+m-1] + " " + y;
+  }
+  if (!row.announced_at) return "Unknown";
+  const days = (Date.now() - Date.parse(row.announced_at)) / 86400000;
+  if (days < 1) return "Announced today";
+  if (days < 7) return "Announced this week";
+  if (days < 31) return "Announced this month";
+  if (days < 93) return "Announced in the last three months";
+  return "Announced earlier";
+}
+
+function roleCell(r) {
+  const tag = `<span class="tag ${r.role}">${r.role}</span>`;
+  if (r.role === "festival") return `${tag} <span class="det">${esc(r.detail || "")}</span>`;
+  if (r.role === "support")  return `${tag} <span class="det">for ${esc(r.detail || "?")}</span>`;
+  return tag;
+}
+
+function ticketCell(r) {
+  const weak = r.ticket_label === "Venue home" || r.ticket_label === "JamBase";
+  const url = r.ticket_url || r.event_url;
+  if (!url) return "";
+  const title = r.ticket_label === "Venue home"
+    ? "Venue homepage — not the event page" : r.ticket_label;
+  return `<a class="lnk${weak ? " weak" : ""}" href="${esc(url)}" target="_blank"` +
+         ` rel="noopener" title="${esc(title)}">${esc(r.ticket_label)}</a>`;
+}
+
+function rowHtml(r) {
+  let cls = "";
+  if (r.start_local && r.start_local.slice(0,10) < TODAY) cls += " past";
+  if (r.status === "cancelled") cls += " cancelled";
+  const when = r.day + (r.time ? " · " + r.time : "");
+  const more = r.other_shows
+    ? ` <span class="more" data-artist="${esc(r.artist)}" data-ev="${esc(r.event_id)}"` +
+      ` tabindex="0" role="button" aria-label="${r.other_shows} more dates">+${r.other_shows}</span>`
+    : "";
+  let badge = "";
+  if (r.status === "cancelled")   badge = '<span class="badge bad">cancelled</span>';
+  else if (r.status === "postponed")   badge = '<span class="badge">postponed</span>';
+  else if (r.status === "rescheduled") badge = '<span class="badge">rescheduled</span>';
+  if (r.possible) badge += '<span class="badge maybe" title="Name match only — not confirmed as your artist">possible</span>';
+  return `<tr class="${cls.trim()}">
+    <td class="dt">${esc(when)}</td>
+    <td class="nm">${esc(r.artist)}${more}${badge}</td>
+    <td class="rl">${roleCell(r)}</td>
+    <td class="c" title="${esc((r.venue||"") + ", " + (r.city||""))}">${esc(r.venue||"")}<span class="city"> · ${esc(r.city||"")}</span></td>
+    <td class="acts">${ticketCell(r)}</td></tr>`;
+}
+
+function fmtDay(iso) {
+  const d = new Date(iso + "T12:00:00");
+  return d.toLocaleDateString("en-GB", {day:"numeric", month:"short"});
+}
+
+function renderSearches() {
+  const el = document.getElementById("searches");
+  if (!isTrip()) { el.hidden = true; return; }
+  el.hidden = false;
+  el.innerHTML = `<div class="lbl">Searches</div>` + tripsHere().map(t =>
+    `<div class="srch" data-id="${t.id}" aria-pressed="${t.id === search}" tabindex="0" role="button">` +
+    `<span class="pl">${esc(t.place)}</span>` +
+    `<span class="meta">${esc(fmtDay(t.date_from))} – ${esc(fmtDay(t.date_to))} · ${t.radius_mi} mi</span>` +
+    `<span class="meta">${t.results.length} artist${t.results.length === 1 ? "" : "s"} · ${t.events_seen} shows searched</span>` +
+    `<span class="meta">updated ${esc(t.fetched_at.slice(0,16).replace("T"," "))} UTC</span>` +
+    `<span class="acts"><button class="btn" data-act="update">Update</button>` +
+    `<button class="btn" data-act="delete">Delete</button></span></div>`).join("");
+}
+
+async function tripPost(url, body) {
+  const res = await fetch(url, {method: "POST", headers: {"Content-Type": "application/json"},
+                                body: body ? JSON.stringify(body) : null});
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.detail || res.statusText);
+  return data;
+}
+
+document.getElementById("searches").addEventListener("click", async e => {
+  const row = e.target.closest(".srch"); if (!row) return;
+  const id = +row.dataset.id;
+  const act = e.target.closest("button")?.dataset.act;
+  if (!act) { search = id; history.replaceState(null, "", "?trip=" + id); render(); return; }
+  if (act === "delete" && !confirm("Delete this search?")) return;
+  const btn = e.target.closest("button"); btn.disabled = true;
+  try {
+    await tripPost(`/api/trips/${id}/${act}`);
+    location.href = act === "delete" ? "/" : "/?trip=" + id;
+  } catch (err) { btn.disabled = false; alert(err.message); }
+});
+document.getElementById("searches").addEventListener("keydown", e => {
+  if (e.key === "Enter" && e.target.classList.contains("srch")) e.target.click(); });
+
+function render() {
+  hidePop();
+  renderSearches();
+  const rows = sorted();
+  ROWS = rows;
+  const groups = [];
+  let cur = null;
+  for (const r of rows) {
+    const label = groupLabel(r);
+    if (!cur || cur.label !== label) { cur = {label, rows: []}; groups.push(cur); }
+    cur.rows.push(r);
+  }
+  document.getElementById("out").innerHTML =
+    `<table><thead><tr><th class="c-when">When</th><th class="c-art">Artist</th>` +
+    `<th class="c-role">Role</th><th class="c-ven">Venue</th>` +
+    `<th class="c-act">Tickets</th></tr></thead><tbody>` +
+    groups.map(g => `<tr class="grprow"><td colspan="5">${esc(g.label)}</td></tr>` +
+                    g.rows.map(rowHtml).join("")).join("") +
+    `</tbody></table>`;
+  const t = curSearch();
+  document.getElementById("lede").textContent = isTrip()
+    ? (t ? `${rows.length} artists playing within ${t.radius_mi} miles of ${t.place}, ${fmtDay(t.date_from)} – ${fmtDay(t.date_to)}` : "")
+    : region === "all"
+    ? `${rows.length} artists in your library with an upcoming show · Portland dates shown where an artist plays more than one region`
+    : `${rows.length} artists playing ${REGIONS.find(r => r[1] === region)[0]}`;
+}
+
+let pop = null;
+
+function showPop(el) {
+  const a = ROWS.find(r => r.artist === el.dataset.artist);
+  if (!a) return;
+  const others = a.shows.filter(s => s.event_id !== el.dataset.ev);
+  if (!others.length) return;
+  pop = document.createElement("div");
+  pop.id = "pop";
+  pop.innerHTML = `<div class="ph">${others.length} more date${others.length>1?"s":""}</div>` +
+    others.map(s => `<div class="pr"><span class="pd">${esc(s.day)}</span>` +
+      `<span class="pv">${esc(s.venue||"")} <span class="pc">${esc(s.city||"")}</span></span></div>`).join("");
+  document.body.appendChild(pop);
+  const r = el.getBoundingClientRect();
+  const left = Math.min(r.left + scrollX, scrollX + innerWidth - pop.offsetWidth - 14);
+  pop.style.top = (r.bottom + scrollY + 6) + "px";
+  pop.style.left = Math.max(scrollX + 8, left) + "px";
+}
+function hidePop() { if (pop) { pop.remove(); pop = null; } }
+
+document.addEventListener("mouseover", e => {
+  const el = e.target.closest(".more"); if (el) { hidePop(); showPop(el); } });
+document.addEventListener("mouseout", e => {
+  if (e.target.closest(".more")) hidePop(); });
+document.addEventListener("focusin", e => {
+  const el = e.target.closest(".more"); if (el) { hidePop(); showPop(el); } });
+document.addEventListener("focusout", hidePop);
+addEventListener("scroll", hidePop, {passive:true});
+
+function syncPressed() {
+  for (const id of ["rtabs", "ttabs", "stabs"])
+    for (const x of document.getElementById(id).children)
+      x.setAttribute("aria-pressed", String(x.dataset.k === (id === "stabs" ? sort : region)));
+}
+
+function tabs(id, items, get, set) {
+  const el = document.getElementById(id);
+  el.innerHTML = items.map(([label, key]) =>
+    `<button class="btn" data-k="${esc(key)}" aria-pressed="${get()===key}">${label}</button>`).join("");
+  el.onclick = e => {
+    const b = e.target.closest("button"); if (!b) return;
+    set(b.dataset.k);
+    syncPressed();
+    render();
+  };
+}
+
+tabs("rtabs", REGIONS.map(([l,k]) => [
+  l + (k === "all" ? "" : ` <span class="cnt">${DATA.filter(a => a.shows.some(s => s.metro_id === k)).length}</span>`), k
+]), () => region, k => region = k);
+tabs("ttabs", TRIP_REGIONS.map(r => [
+  esc(r) + ` <span class="cnt">${TRIPS.filter(t => t.region === r).length}</span>`, "trip:" + r
+]), () => region, k => {
+  region = k;
+  const here = tripsHere();
+  if (!here.some(t => t.id === search)) search = here.length ? here[0].id : null;
+});
+tabs("stabs", SORTS, () => sort, k => sort = k);
+
+// ?trip=<id> opens that search (used after creating or updating one).
+const wanted = +new URLSearchParams(location.search).get("trip");
+const opened = TRIPS.find(t => t.id === wanted);
+if (opened) { region = "trip:" + opened.region; search = opened.id; syncPressed(); }
+
+const tb = document.getElementById("tripbtn"), tfp = document.getElementById("tripform");
+tb.onclick = () => {
+  const open = tfp.classList.toggle("open");
+  tb.setAttribute("aria-expanded", String(open));
+  if (open) tfp.querySelector("input[name=place]").focus();
+};
+document.getElementById("tf").addEventListener("submit", async e => {
+  e.preventDefault();
+  const f = new FormData(e.target), btn = e.target.querySelector("button");
+  const msg = document.getElementById("tfmsg");
+  btn.disabled = true; msg.className = "hint"; msg.textContent = "Searching…";
+  try {
+    const r = await tripPost("/api/trips", {
+      place: f.get("place"), date_from: f.get("date_from"), date_to: f.get("date_to"),
+      radius_mi: +f.get("radius_mi") || null});
+    location.href = "/?trip=" + r.id;
+  } catch (err) {
+    btn.disabled = false; msg.className = "hint err"; msg.textContent = err.message;
+  }
+});
+render();
+</script>
+</body></html>
