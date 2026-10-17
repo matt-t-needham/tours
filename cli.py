@@ -1,6 +1,7 @@
 """tour_tracker CLI. Run: python -m cli <subcommand>  (or `tours` in Docker)."""
 import logging
 import sys
+import time
 
 import click
 
@@ -13,6 +14,8 @@ import match as matcher
 import plex
 import trips
 
+# Log stamps are UTC whatever the container TZ (set for show dates).
+logging.Formatter.converter = time.gmtime
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s"
 )
@@ -64,7 +67,7 @@ def jambase_sync(metros):
     """Full pull of every event in the configured metros (~45 calls)."""
     conn = _conn()
     if jambase.refresh_quota(conn) is None:
-        click.echo("quota endpoint unavailable — guarding on the local estimate", err=True)
+        log.warning("quota endpoint unavailable, guarding on the local estimate")
     with jambase.Client(conn) as client:
         before = jambase.calls_this_period(conn)
         try:

@@ -4,6 +4,7 @@ Serves the rendered page and the review pane. The scheduled jobs run through
 cli.py (host cron, `docker exec`), not from here.
 """
 import logging
+import time
 from urllib.parse import urlparse
 
 from fastapi import FastAPI, HTTPException, Request
@@ -17,6 +18,8 @@ import match as matcher
 import render
 import trips
 
+# Log stamps are UTC whatever the container TZ (set for show dates).
+logging.Formatter.converter = time.gmtime
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s"
 )
@@ -123,7 +126,7 @@ def _spend(fn):
         except jambase.BudgetExhausted as exc:
             raise HTTPException(429, str(exc))
         except jambase.JamBaseError as exc:
-            log.warning("trip search failed: %s", exc)
+            log.error("trip search failed: %s", exc)
             raise HTTPException(502, "JamBase request failed")
 
 
