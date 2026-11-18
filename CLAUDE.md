@@ -1,5 +1,7 @@
 # CLAUDE.md — tour_tracker
 
+Stack: Python, FastAPI, SQLite, jinja2, click.
+
 Finds upcoming concerts in Portland, Seattle and the SF Bay Area by artists in
 the Plex music library, and publishes them as a private page. Port 3011
 (compose service `tours`), intended for `tours.bix.computer` behind Cloudflare
@@ -8,10 +10,10 @@ Access.
 ## Commands
 
 ```bash
-# Dev (outside Docker) — PLEX_URL must point at the LAN address, not
-# host.docker.internal
+# Dev (outside Docker) — same URL compose uses. HTTPS only: Plex has Secure
+# connections set to Required and drops plain HTTP.
 set -a; . ../bix-infra/.env; set +a
-export PLEX_URL=http://192.168.0.47:32400
+export PLEX_URL=https://192-168-0-47.f36c68c9b4df46aba571b86b56ca5d01.plex.direct:32400
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt pytest==8.3.4
 .venv/bin/python -m pytest -q              # 94 offline tests
 .venv/bin/uvicorn main:app --reload --port 8011
@@ -59,10 +61,11 @@ review.
 - `events.py` — event ingest, the three-shape coercion helpers, metro-region assertion
 - `match.py` — performer → Plex artist linking, review queue
 - `render.py` — page context; one row per ARTIST (Portland preferred), `ticket_label` naming the real seller
+- `cities.py` — local city index for the US, Canada and Australia (`cities.tsv`, GeoNames CC BY 4.0; JamBase covers all three — Toronto and Sydney checked 2026-10-27; labels name the country outside the US because WA/NT are both US/Canadian and Australian codes) for the trip form's autocomplete and the up-front city check: an unknown or ambiguous city is refused before any JamBase call. Regenerate the TSV with `build_cities.py` (its docstring has the download); never edit it by hand
 - `trips.py` — saved trip searches (place + date range): resolve city → metro tab, search by lat/lon radius, match against existing link decisions without writing any; results stored as JSON on `trip_search`
 - `digest.py` — immutable digest files for the RSS feed (`new` Mondays, `portland` Thursdays); written to `data/digests/<kind>-<date>.json`
 - `cli.py` — click subcommands (what cron runs)
-- `main.py` — FastAPI: `/`, `/review`, `/api/pending`, `/api/decide`, `/api/status`, `/healthz`, `POST /api/trips`, `/api/trips/{id}/update|delete` (same-origin only)
+- `main.py` — FastAPI: `/`, `/review`, `/api/pending`, `/api/decide`, `/api/status`, `/api/cities?q=`, `/healthz`, `POST /api/trips`, `/api/trips/{id}/update|delete` (same-origin only)
 - `templates/index.html`, `static/review.html` — no build step
 - `tests/` — fully offline; Docker build has a hard test gate
 
