@@ -71,12 +71,12 @@ review.
 
 ## Gotchas
 
-- **`JAMBASE_METRO_IDS` must stay quoted in `.env`.** It contains pipes;
-  unquoted, any shell that sources `.env` splits on them and silently sets the
-  variable to the first ID alone.
 - **`jambase:53` is also named "Portland Area" — it is Portland, MAINE.**
   `events.assert_metro_regions` refuses to sync if metro 17 stops reporting
   `US-OR`.
+- **`JAMBASE_METRO_IDS` must stay quoted in `.env`.** It contains pipes;
+  unquoted, any shell that sources `.env` splits on them and silently sets the
+  variable to the first ID alone.
 - **JamBase's JSON-LD has three shapes for the same field.** Region is a bare
   ISO string at metro level, a full name at city level, and an object in event
   venue addresses. `geo` uses `@type` in some places and `type` in others. Use
